@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Monitoreo | Sistema TAG</title>
+
+    <script>
+        // Estado del menú antes del primer pintado: evita parpadeos y cambios de layout.
+        (function () {
+            try {
+                document.documentElement.dataset.sidebarState =
+                    localStorage.getItem('sistemaMonitoreoTAG.sidebarOpen') === '1' ? 'open' : 'closed';
+            } catch (_) {
+                document.documentElement.dataset.sidebarState = 'closed';
+            }
+        })();
+    </script>
+        <link rel="stylesheet" href="css/estilos.css?v=41">
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+</head>
+
+<body>
+
+<div class="app-shell">
+<script>
+    (function () {
+        const shell = document.querySelector('.app-shell');
+        if (!shell) return;
+        const open = document.documentElement.dataset.sidebarState === 'open';
+        shell.classList.add(open ? 'sidebar-open' : 'sidebar-collapsed');
+    })();
+</script>
+
+    <button id="btnSidebarToggle" class="sidebar-toggle" type="button" aria-label="Desplegar menú lateral" aria-expanded="false" title="Desplegar menú">☰</button>
+
+    <aside class="sidebar">
+
+        <div class="brand">
+            <div class="brand-icon">🚛</div>
+
+            <div>
+                <strong>MONITOREO TAG</strong>
+                <small>SISTEMA OPERATIVO</small>
+            </div>
+        </div>
+
+        <nav class="menu">
+<a href="monitoreo.html" class="menu-item activa">
+                <span>📡</span>
+                MONITOREO
+            </a>
+
+            <a href="concluidos.html" class="menu-item">
+                <span>✓</span>
+                CONCLUIDOS
+            </a>
+
+            <a href="operadores.html" class="menu-item">
+                <span>👤</span>
+                OPERADORES
+            </a>
+
+            <a href="unidades.html" class="menu-item">
+                <span>🚚</span>
+                UNIDADES
+            </a>
+
+            <a href="rutas.html" class="menu-item">
+                <span>🛣️</span>
+                RUTAS
+            </a>
+
+        </nav>
+
+        <div class="sidebar-user" title="Usuario autenticado">
+            <span class="sidebar-user-icon">●</span>
+            <span class="sidebar-user-email" data-user-email>USUARIO</span>
+        </div>
+
+        <button id="btnCerrarSesion" class="menu-logout" type="button">
+            <span>↪</span>
+            CERRAR SESIÓN
+        </button>
+
+        <div class="sidebar-footer">
+            <span class="estado-dot"></span>
+            SISTEMA EN LÍNEA
+        </div>
+
+    </aside>
+
+
+    <main class="main-content">
+
+        <header class="topbar">
+
+            <div>
+                <span class="eyebrow">
+                    OPERACIÓN
+                </span>
+
+                <h1>
+                    MONITOREO OPERATIVO
+                </h1>
+
+                <p>
+                    SEGUIMIENTO DE VIAJES EN TIEMPO REAL
+                </p>
+            </div>
+
+            <div class="topbar-actions">
+
+                <div id="estadoTiempoReal" class="live-indicator conectando">
+                    <span class="live-dot"></span>
+                    <span id="textoTiempoReal">CONECTANDO...</span>
+                    <small id="ultimaSincronizacion">—</small>
+                </div>
+
+                <button
+                    id="btnNuevo"
+                    class="btn btn-primary">
+
+                    + NUEVO VIAJE
+
+                </button>
+
+            </div>
+
+        </header>
+<section class="panel">
+
+            <div class="panel-header">
+
+                <div>
+                    <h2>MONITOREO DE VIAJES</h2>
+
+                    <p>
+                        LOS ESTATUS PUEDEN MODIFICARSE DIRECTAMENTE DESDE LA TABLA.
+                    </p>
+                </div>
+
+                <button
+                    id="btnRecargar"
+                    class="btn btn-secondary">
+
+                    ↻ RECARGAR
+
+                </button>
+
+            </div>
+
+
+            <div class="table-wrapper">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>ECO</th>
+                            <th>OPERADOR</th>
+                            <th>DESTINO</th>
+                            <th>MUNICIPIO</th>
+                            <th>SALIDA</th>
+                            <th>TIEMPO FUERA</th>
+                            <th>ESTATUS</th>
+                            <th>ACCIÓN</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="tablaViajes"></tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+<!-- =========================================================
+     MODAL NUEVO VIAJE
+========================================================= -->
+
+<div
+    id="modal"
+    class="modal">
+
+    <div class="modal-content large">
+
+        <div class="modal-header">
+
+            <div>
+
+                <span class="eyebrow">
+                    REGISTRO OPERATIVO
+                </span>
+
+                <h2>
+                    NUEVO VIAJE
+                </h2>
+
+            </div>
+
+            <button
+                id="cerrar"
+                class="modal-close">
+
+                ×
+
+            </button>
+
+        </div>
+
+
+        <form id="formViaje">
+
+            <div class="form-grid">
+
+
+                <div class="form-group">
+
+                    <label for="id">
+                        ID DEL VIAJE
+                    </label>
+
+                    <input
+                        id="id"
+                        type="text"
+                        readonly
+                        class="input-auto">
+
+                    <small id="infoSemana" class="field-info">
+                        SELECCIONA UNA FECHA.
+                    </small>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="ot">
+                        OT
+                    </label>
+
+                    <input
+                        id="ot"
+                        type="text"
+                        value="SOT-OFM"
+                        readonly>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="fecha">
+                        FECHA
+                    </label>
+
+                    <input
+                        id="fecha"
+                        type="date"
+                        required>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="hora">
+                        HORA DE SALIDA
+                    </label>
+
+                    <input
+                        id="hora"
+                        required type="text" class="hora-24" inputmode="numeric" maxlength="5" pattern="(?:[01]\d|2[0-3]):[0-5]\d" placeholder="HH:MM" autocomplete="off">
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="operador">
+                        OPERADOR
+                    </label>
+
+                    <div class="smart-picker">
+                        <input id="operador" type="text" required autocomplete="off" placeholder="ESCRIBE PARA BUSCAR" aria-autocomplete="list" aria-controls="sugerenciasOperador">
+                        <div id="sugerenciasOperador" class="smart-suggestions" role="listbox" hidden></div>
+                    </div>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="tag">
+                        TAG
+                    </label>
+
+                    <input
+                        id="tag"
+                        type="text"
+                        placeholder="TAG AUTOMÁTICO O MANUAL"
+                        autocomplete="off">
+
+                    <small class="field-info">
+                        SI EL OPERADOR TIENE TAG, SE CARGARÁ AUTOMÁTICAMENTE.
+                    </small>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="ejes">
+                        EJES
+                    </label>
+
+                    <div class="smart-picker">
+                        <input id="ejes" type="text" required autocomplete="off" placeholder="ESCRIBE O SELECCIONA" aria-autocomplete="list" aria-controls="sugerenciasEjes">
+                        <div id="sugerenciasEjes" class="smart-suggestions" role="listbox" hidden></div>
+                    </div>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="eco">
+                        UNIDAD / ECO
+                    </label>
+
+                    <div class="smart-picker">
+                        <input id="eco" type="text" required autocomplete="off" placeholder="ESCRIBE ECO PARA BUSCAR" aria-autocomplete="list" aria-controls="sugerenciasEco">
+                        <div id="sugerenciasEco" class="smart-suggestions" role="listbox" hidden></div>
+                    </div>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="origen">
+                        ORIGEN
+                    </label>
+
+                    <div class="smart-picker">
+                        <input id="origen" type="text" required autocomplete="off" placeholder="ESCRIBE PARA BUSCAR" aria-autocomplete="list" aria-controls="sugerenciasOrigenViaje">
+                        <div id="sugerenciasOrigenViaje" class="smart-suggestions" role="listbox" hidden></div>
+                    </div>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="destino">
+                        DESTINO
+                    </label>
+
+                    <input
+                        id="destino"
+                        type="text"
+                        required
+                        autocomplete="off"
+                        placeholder="ESCRIBE EL DESTINO">
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="municipio">
+                        MUNICIPIO / ALCALDÍA
+                    </label>
+
+                    <div class="smart-picker">
+                        <input
+                            id="municipio"
+                            type="text"
+                            required
+                            autocomplete="off"
+                            placeholder="ESCRIBE PARA BUSCAR DESTINO / MUNICIPIO"
+                            aria-autocomplete="list"
+                            aria-controls="sugerenciasMunicipioViaje">
+                        <div id="sugerenciasMunicipioViaje" class="smart-suggestions" role="listbox" hidden></div>
+                    </div>
+
+                    <small class="field-info">
+                        PUEDES ESCRIBIR O ELEGIR UNA OPCIÓN DE LA LISTA.
+                    </small>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="estatus">
+                        ESTATUS
+                    </label>
+
+                    <select
+                        id="estatus"
+                        required>
+
+                        <option value="EN RUTA">
+                            EN RUTA
+                        </option>
+
+                    </select>
+
+                    <small class="field-info">
+                        EL VIAJE SE REGISTRA INICIALMENTE COMO EN RUTA. LOS DEMÁS ESTATUS SE ACTUALIZAN DESDE MONITOREO.
+                    </small>
+
+                </div>
+
+            </div>
+
+
+            <div class="modal-actions">
+
+                <button
+                    type="button"
+                    id="btnCancelarNuevo"
+                    class="btn btn-secondary">
+
+                    CANCELAR
+
+                </button>
+
+                <button
+                    type="submit"
+                    class="btn btn-primary">
+
+                    GUARDAR VIAJE
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     MODAL EDITAR VIAJE ACTIVO
+========================================================= -->
+
+<div id="modalEditarActivo" class="modal">
+    <div class="modal-content large">
+        <div class="modal-header">
+            <div>
+                <span class="eyebrow">CORRECCIÓN OPERATIVA</span>
+                <h2>EDITAR VIAJE</h2>
+                <p class="modal-subtitle">Corrige los datos del viaje sin alterar su historial de conclusión.</p>
+            </div>
+            <button type="button" id="btnCerrarEdicionActivo" class="modal-close">×</button>
+        </div>
+
+        <form id="formEditarActivo">
+            <div class="form-grid">
+                <div class="form-group"><label>ID DEL VIAJE</label><input id="editarIdActivo" type="text" readonly class="input-auto"></div>
+                <div class="form-group"><label>OT</label><input id="editarOtActivo" type="text" readonly value="SOT-OFM"></div>
+                <div class="form-group"><label for="editarFechaActivo">FECHA</label><input id="editarFechaActivo" type="date" required></div>
+                <div class="form-group"><label for="editarHoraActivo">HORA DE SALIDA</label><input id="editarHoraActivo" required type="text" class="hora-24" inputmode="numeric" maxlength="5" pattern="(?:[01]\d|2[0-3]):[0-5]\d" placeholder="HH:MM" autocomplete="off"></div>
+                <div class="form-group"><label for="editarOperadorActivo">OPERADOR</label><div class="smart-picker"><input id="editarOperadorActivo" type="text" required autocomplete="off" placeholder="ESCRIBE PARA BUSCAR" aria-autocomplete="list" aria-controls="sugerenciasEditarOperador"><div id="sugerenciasEditarOperador" class="smart-suggestions" role="listbox" hidden></div></div></div>
+                <div class="form-group"><label for="editarTagActivo">TAG</label><input id="editarTagActivo" type="text" placeholder="TAG AUTOMÁTICO O MANUAL" autocomplete="off"></div>
+                <div class="form-group"><label for="editarEjesActivo">EJES</label><div class="smart-picker"><input id="editarEjesActivo" type="text" required autocomplete="off" placeholder="ESCRIBE O SELECCIONA" aria-autocomplete="list" aria-controls="sugerenciasEditarEjes"><div id="sugerenciasEditarEjes" class="smart-suggestions" role="listbox" hidden></div></div></div>
+                <div class="form-group"><label for="editarEcoActivo">UNIDAD / ECO</label><div class="smart-picker"><input id="editarEcoActivo" type="text" required autocomplete="off" placeholder="ESCRIBE ECO PARA BUSCAR" aria-autocomplete="list" aria-controls="sugerenciasEditarEco"><div id="sugerenciasEditarEco" class="smart-suggestions" role="listbox" hidden></div></div></div>
+                <div class="form-group"><label for="editarOrigenActivo">ORIGEN</label><div class="smart-picker"><input id="editarOrigenActivo" type="text" autocomplete="off" placeholder="ESCRIBE PARA BUSCAR" aria-autocomplete="list" aria-controls="sugerenciasEditarOrigen"><div id="sugerenciasEditarOrigen" class="smart-suggestions" role="listbox" hidden></div></div></div>
+                <div class="form-group"><label for="editarDestinoActivo">DESTINO</label><input id="editarDestinoActivo" type="text" required autocomplete="off" placeholder="ESCRIBE EL DESTINO"></div>
+                <div class="form-group"><label for="editarMunicipioActivo">MUNICIPIO / ALCALDÍA</label><div class="smart-picker"><input id="editarMunicipioActivo" type="text" required autocomplete="off" placeholder="ESCRIBE PARA BUSCAR DESTINO / MUNICIPIO" aria-autocomplete="list" aria-controls="sugerenciasEditarMunicipio"><div id="sugerenciasEditarMunicipio" class="smart-suggestions" role="listbox" hidden></div></div><small class="field-info">PUEDES ESCRIBIR O ELEGIR UNA OPCIÓN DE LA LISTA.</small></div>
+            </div>
+            <div class="edit-note"><strong>Nota:</strong> el estatus se mantiene en la tabla para conservar el flujo de conclusión y registro de casetas.</div>
+            <div class="modal-actions">
+                <button type="button" id="btnCancelarEdicionActivo" class="btn btn-secondary">CANCELAR</button>
+                <button type="submit" class="btn btn-primary">GUARDAR CAMBIOS</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<!-- =========================================================
+     MODAL CONFIRMACIÓN
+========================================================= -->
+
+<div
+    id="modalConfirmar"
+    class="modal">
+
+    <div class="modal-content small">
+
+        <div class="confirm-icon">
+            ✓
+        </div>
+
+        <h2>
+            CONCLUIR VIAJE
+        </h2>
+
+        <p>
+            ¿DESEAS CONCLUIR ESTE VIAJE?
+        </p>
+
+        <div class="modal-actions">
+
+            <button
+                id="btnCancelarConclusion"
+                class="btn btn-secondary">
+
+                NO
+
+            </button>
+
+            <button
+                id="btnConfirmarConclusion"
+                class="btn btn-success">
+
+                SÍ, CONCLUIR
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     MODAL FINALIZAR
+========================================================= -->
+
+<div
+    id="modalFinalizar"
+    class="modal">
+
+    <div class="modal-content large">
+
+        <div class="modal-header">
+
+            <div>
+
+                <span class="eyebrow">
+                    CIERRE OPERATIVO
+                </span>
+
+                <h2>
+                    FINALIZAR VIAJE
+                </h2>
+
+            </div>
+
+            <button
+                id="btnCancelarFinalizacion"
+                class="modal-close">
+
+                ×
+
+            </button>
+
+        </div>
+
+
+        <form id="formFinalizar">
+
+
+            <div id="resumenViajeFinalizar" class="viaje-contexto" aria-label="Resumen del viaje">
+
+                <div class="viaje-contexto-item">
+                    <span>DESTINO</span>
+                    <strong id="finalDestino">—</strong>
+                </div>
+
+                <div class="viaje-contexto-item">
+                    <span>MUNICIPIO</span>
+                    <strong id="finalMunicipio">—</strong>
+                </div>
+
+                <div class="viaje-contexto-item">
+                    <span>OPERADOR</span>
+                    <strong id="finalOperador">—</strong>
+                </div>
+
+                <div class="viaje-contexto-item">
+                    <span>UNIDAD / ECO</span>
+                    <strong id="finalUnidad">—</strong>
+                </div>
+
+                <div class="viaje-contexto-item viaje-contexto-salida">
+                    <span>SALIDA</span>
+                    <strong id="finalSalida">—</strong>
+                </div>
+
+            </div>
+
+
+            <div class="form-grid">
+
+                <div class="form-group">
+
+                    <label for="fechaFinal">
+                        FECHA FINAL
+                    </label>
+
+                    <input
+                        id="fechaFinal"
+                        type="date"
+                        required>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="horaFinal">
+                        HORA FINAL
+                    </label>
+
+                    <input
+                        id="horaFinal"
+                        required type="text" class="hora-24" inputmode="numeric" maxlength="5" pattern="(?:[01]\d|2[0-3]):[0-5]\d" placeholder="HH:MM" autocomplete="off">
+
+                </div>
+
+            </div>
+
+
+            <div class="form-group form-group-full final-observaciones">
+                <label for="observacionesFinal">OBSERVACIONES DE CIERRE <span class="label-optional">OPCIONAL</span></label>
+                <textarea id="observacionesFinal" rows="3" placeholder="ESCRIBE AQUÍ CUALQUIER INCIDENCIA, COMENTARIO O DETALLE DEL CIERRE..."></textarea>
+                <small class="field-info final-observaciones-hint">ESTE CAMPO APARECE ÚNICAMENTE AL CONCLUIR EL VIAJE.</small>
+            </div>
+
+
+            <div class="route-loader">
+                <div class="route-loader-row">
+                    <div class="form-group">
+                        <label for="rutaGuardada">RUTA GUARDADA (OPCIONAL)</label>
+                        <div class="compact-autocomplete"><input id="rutaGuardada" type="search" autocomplete="off" placeholder="BUSCA ORIGEN O DESTINO..."><div id="sugerenciasRutaCierre" class="route-suggestions" hidden></div></div>
+                    </div>
+                    <button type="button" id="btnCargarRuta" class="btn btn-secondary">CARGAR CASETAS</button>
+                </div>
+                <small id="estadoRutaCierre" class="route-loader-status">PUEDES CAPTURAR LAS CASETAS MANUALMENTE.</small>
+            </div>
+
+
+            <div class="section-title">
+
+                <div>
+                    <h3>CASETAS</h3>
+                    <p>REGISTRA CADA CASETA UTILIZADA.</p>
+                </div>
+
+                <button
+                    type="button"
+                    id="btnAgregarCaseta"
+                    class="btn btn-secondary">
+
+                    + AGREGAR CASETA
+
+                </button>
+
+            </div>
+
+
+            <div
+                id="listaCasetas"
+                class="casetas-list">
+
+            </div>
+
+
+            <div class="cost-summary">
+
+                <div>
+                    <span>SUBTOTAL</span>
+                    <strong id="subtotalFinal">$0.00</strong>
+                </div>
+
+                <div>
+                    <span>IVA</span>
+                    <strong id="ivaFinal">$0.00</strong>
+                </div>
+
+                <div class="total">
+                    <span>TOTAL</span>
+                    <strong id="totalFinal">$0.00</strong>
+                </div>
+
+            </div>
+
+
+            <div class="modal-actions">
+
+                <button
+                    type="button"
+                    id="btnCancelarFinalizacion2"
+                    class="btn btn-secondary">
+
+                    CANCELAR
+
+                </button>
+
+                <button
+                    type="submit"
+                    class="btn btn-success">
+
+                    GUARDAR Y CONCLUIR
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     ALERTAS DE SEGUIMIENTO CADA 3 HORAS
+========================================================= -->
+<div id="modalAlertasMonitoreo" class="modal modal-alertas" aria-hidden="true">
+    <div class="modal-content alertas-content">
+        <div class="modal-header">
+            <div>
+                <span class="eyebrow">SEGUIMIENTO OPERATIVO</span>
+                <h2>ALERTAS PENDIENTES</h2>
+                <p class="modal-subtitle">Cada alerta se reinicia durante 3 horas al atenderla.</p>
+            </div>
+            <button id="cerrarAlertasMonitoreo" class="modal-close" type="button" aria-label="Cerrar">×</button>
+        </div>
+        <div id="listaAlertasMonitoreo" class="alertas-lista"></div>
+    </div>
+</div>
+
+
+<!-- =========================================================
+     CONTENEDOR DE MAPAS GPS SAMSARA
+     Cada ECO abre su propio mapa; solo se cierra con su X.
+========================================================= -->
+<div id="samsaraMapsContainer" class="samsara-maps-container" aria-live="polite"></div>
+
+<div id="toastSistema" class="system-toast" aria-live="polite">
+    <span class="toast-icon">✓</span>
+    <div>
+        <strong id="toastTitulo">Sistema actualizado</strong>
+        <small id="toastMensaje">Los datos están al día.</small>
+    </div>
+</div>
+
+
+<datalist id="listaOperadores"></datalist>
+<datalist id="listaUnidades"></datalist>
+<datalist id="listaEjes">
+    <option value="1 Eje"></option><option value="2 Ejes"></option><option value="3 Ejes"></option>
+    <option value="4 Ejes"></option><option value="5 Ejes"></option><option value="6 Ejes"></option>
+    <option value="7 Ejes"></option><option value="8 Ejes"></option><option value="9 Ejes"></option>
+</datalist>
+<datalist id="listaOrigenes"></datalist>
+<datalist id="listaDestinos"></datalist>
+<datalist id="listaRutasCierre"></datalist>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="js/supabase.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="js/auth.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", async () => {
+        const sesion = await window.SistemaAuth.protegerPagina();
+        if (!sesion) return;
+        const btn = document.getElementById("btnCerrarSesion");
+        if (btn) btn.addEventListener("click", () => window.SistemaAuth.cerrarSesion());
+    });
+</script>
+<script src="js/utilidades.js"></script>
+<script src="js/alertas.js"></script>
+<script src="js/monitoreo.js"></script>
+<script src="js/samsara.js?v=40"></script>
+
+<script src="js/sidebar.js"></script>
+</body>
+</html>

@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Concluidos | Sistema TAG</title>
+
+    <script>
+        // Estado del menú antes del primer pintado: evita parpadeos y cambios de layout.
+        (function () {
+            try {
+                document.documentElement.dataset.sidebarState =
+                    localStorage.getItem('sistemaMonitoreoTAG.sidebarOpen') === '1' ? 'open' : 'closed';
+            } catch (_) {
+                document.documentElement.dataset.sidebarState = 'closed';
+            }
+        })();
+    </script>
+    <link rel="stylesheet" href="css/estilos.css?v=41">
+
+</head>
+
+<body>
+
+<div class="app-shell">
+<script>
+    (function () {
+        const shell = document.querySelector('.app-shell');
+        if (!shell) return;
+        const open = document.documentElement.dataset.sidebarState === 'open';
+        shell.classList.add(open ? 'sidebar-open' : 'sidebar-collapsed');
+    })();
+</script>
+
+    <button id="btnSidebarToggle" class="sidebar-toggle" type="button" aria-label="Desplegar menú lateral" aria-expanded="false" title="Desplegar menú">☰</button>
+
+    <aside class="sidebar">
+
+        <div class="brand">
+            <div class="brand-icon">🚛</div>
+
+            <div>
+                <strong>MONITOREO TAG</strong>
+                <small>SISTEMA OPERATIVO</small>
+            </div>
+        </div>
+
+        <nav class="menu">
+<a href="monitoreo.html" class="menu-item">
+                <span>📡</span>
+                MONITOREO
+            </a>
+
+            <a href="concluidos.html" class="menu-item activa">
+                <span>✓</span>
+                CONCLUIDOS
+            </a>
+
+            <a href="operadores.html" class="menu-item">
+                <span>👤</span>
+                OPERADORES
+            </a>
+
+            <a href="unidades.html" class="menu-item">
+                <span>🚚</span>
+                UNIDADES
+            </a>
+
+            <a href="rutas.html" class="menu-item">
+                <span>🛣️</span>
+                RUTAS
+            </a>
+
+        </nav>
+
+        <div class="sidebar-user" title="Usuario autenticado">
+            <span class="sidebar-user-icon">●</span>
+            <span class="sidebar-user-email" data-user-email>USUARIO</span>
+        </div>
+
+        <button id="btnCerrarSesion" class="menu-logout" type="button">
+            <span>↪</span>
+            CERRAR SESIÓN
+        </button>
+
+        <div class="sidebar-footer">
+            <span class="estado-dot"></span>
+            SISTEMA EN LÍNEA
+        </div>
+
+    </aside>
+
+
+    <main class="main-content">
+
+        <header class="topbar">
+
+            <div>
+
+                <span class="eyebrow">
+                    HISTÓRICO
+                </span>
+
+                <h1>
+                    VIAJES CONCLUIDOS
+                </h1>
+
+                <p>
+                    CONSULTA, EDICIÓN Y EXPORTACIÓN
+                </p>
+
+            </div>
+
+            <button
+                id="btnExportarExcel" aria-label="Exportar viajes a Excel" title="Exportar Excel"
+                class="btn btn-success">
+
+                📊 EXPORTAR EXCEL
+
+            </button>
+
+        </header>
+
+
+        <section class="panel">
+
+            <div class="filters">
+
+                <div class="form-group">
+
+                    <label>
+                        BUSCAR
+                    </label>
+
+                    <input
+                        id="buscar"
+                        type="search"
+                        placeholder="ID, OPERADOR, ECO, TAG...">
+
+                </div>
+
+
+                <div class="form-group filtro-fecha">
+                    <label for="filtroFechaFinal">DÍA DE INICIO DE RUTA</label>
+                    <input id="filtroFechaFinal" type="date">
+                    <small class="field-info">FILTRA POR LA FECHA EN QUE INICIÓ EL VIAJE, NO POR LA FECHA DE CONCLUSIÓN.</small>
+                </div>
+
+                <div class="filter-actions">
+                    <button id="btnHoyConcluidos" type="button" class="btn btn-secondary">HOY</button>
+                    <button id="btnLimpiarFiltros" type="button" class="btn btn-ghost">LIMPIAR</button>
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        AÑO
+                    </label>
+
+                    <select id="filtroAnio" class="compact-filter">
+
+                        <option value="">
+                            TODOS
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        SEMANA
+                    </label>
+
+                    <select id="filtroSemana" class="compact-filter">
+
+                        <option value="">
+                            TODAS
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        OPERADOR
+                    </label>
+
+                    <select id="filtroOperador" class="compact-filter">
+
+                        <option value="">
+                            TODOS
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        ECO
+                    </label>
+
+                    <select id="filtroEco" class="compact-filter">
+
+                        <option value="">
+                            TODOS
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <section class="panel">
+
+            <div class="panel-header">
+
+                <div>
+
+                    <h2>
+                        REGISTROS CONCLUIDOS
+                    </h2>
+
+                    <p id="contadorConcluidos">
+                        0 REGISTROS
+                    </p>
+
+                </div>
+
+                <button
+                    id="btnRecargarConcluidos"
+                    class="btn btn-secondary">
+
+                    ↻ RECARGAR
+
+                </button>
+
+            </div>
+
+
+            <div class="table-wrapper">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>ID</th>
+                            <th>OT</th>
+                            <th>FECHA</th>
+                            <th>HORA</th>
+                            <th>TAG</th>
+                            <th>OPERADOR</th>
+                            <th>EJES</th>
+                            <th>ECO</th>
+                            <th>ORIGEN</th>
+                            <th>DESTINO</th>
+                            <th>FECHA FINAL</th>
+                            <th>HORA FINAL</th>
+                            <th>ESTATUS</th>
+                            <th>TOTAL</th>
+                            <th>ACCIÓN</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="tablaConcluidos"></tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+
+<!-- =========================================================
+     MODAL EDITAR
+========================================================= -->
+
+<div
+    id="modalEditarFinalizado"
+    class="modal">
+
+    <div class="modal-content large">
+
+        <div class="modal-header">
+
+            <div>
+
+                <span class="eyebrow">
+                    CORRECCIÓN
+                </span>
+
+                <h2>
+                    EDITAR VIAJE CONCLUIDO
+                </h2>
+
+            </div>
+
+            <button
+                id="btnCerrarEdicion"
+                class="modal-close">
+
+                ×
+
+            </button>
+
+        </div>
+
+
+        <form id="formEditarFinalizado">
+
+            <div class="form-grid edit-viaje-grid">
+                <div class="form-group"><label>ID DEL VIAJE</label><input id="editarIdViaje" type="text" readonly class="input-auto"></div>
+                <div class="form-group"><label>OT</label><input id="editarOtViaje" type="text" readonly class="input-auto"></div>
+                <div class="form-group"><label for="editarFechaViaje">FECHA</label><input id="editarFechaViaje" type="date" required></div>
+                <div class="form-group"><label for="editarHoraViaje">HORA DE SALIDA</label><input id="editarHoraViaje" required type="text" class="hora-24" inputmode="numeric" maxlength="5" pattern="(?:[01]\d|2[0-3]):[0-5]\d" placeholder="HH:MM" autocomplete="off"></div>
+                <div class="form-group"><label for="editarOperadorViaje">OPERADOR</label><input id="editarOperadorViaje" type="text" required autocomplete="off"></div>
+                <div class="form-group"><label for="editarTagViaje">TAG</label><input id="editarTagViaje" type="text" autocomplete="off"></div>
+                <div class="form-group"><label for="editarEjesViaje">EJES</label><input id="editarEjesViaje" type="text" required autocomplete="off"></div>
+                <div class="form-group"><label for="editarEcoViaje">UNIDAD / ECO</label><input id="editarEcoViaje" type="text" required autocomplete="off"></div>
+                <div class="form-group"><label for="editarOrigenViaje">ORIGEN</label><input id="editarOrigenViaje" type="text" autocomplete="off"></div>
+                <div class="form-group"><label for="editarDestinoViaje">DESTINO</label><input id="editarDestinoViaje" type="text" autocomplete="off"></div>
+                <div class="form-group"><label for="editarMunicipioViaje">MUNICIPIO / ALCALDÍA</label><input id="editarMunicipioViaje" type="text" autocomplete="off"></div>
+                <div class="form-group">
+                    <label for="editarEstatusViaje">ESTATUS</label>
+                    <select id="editarEstatusViaje" required class="status-select">
+                        <option value="PENDIENTE">PENDIENTE</option>
+                        <option value="EN RUTA">EN RUTA</option>
+                        <option value="EN ESPERA">EN ESPERA</option>
+                        <option value="CONCLUIDO">CONCLUIDO</option>
+                        <option value="CANCELADO">CANCELADO</option>
+                    </select>
+                    <small class="field-info">PUEDES CORREGIR EL ESTATUS. SI DEJA DE SER CONCLUIDO, SALDRÁ DE ESTE HISTÓRICO.</small>
+                </div>
+                <div class="form-group"><label for="editarFechaFinal">FECHA FINAL</label><input id="editarFechaFinal" type="date" required></div>
+                <div class="form-group"><label for="editarHoraFinal">HORA FINAL</label><input id="editarHoraFinal" required type="text" class="hora-24" inputmode="numeric" maxlength="5" pattern="(?:[01]\d|2[0-3]):[0-5]\d" placeholder="HH:MM" autocomplete="off"></div>
+            </div>
+
+            <div class="form-group edit-observaciones">
+                <label for="editarObservaciones">OBSERVACIONES</label>
+                <textarea id="editarObservaciones" rows="3" placeholder="CAPTURA CUALQUIER OBSERVACIÓN DEL VIAJE..."></textarea>
+            </div>
+
+
+            <div class="section-title">
+
+                <div>
+                    <h3>CASETAS</h3>
+                    <p>PUEDES CORREGIR LAS CASETAS Y SUS COSTOS.</p>
+                </div>
+
+                <button
+                    type="button"
+                    id="btnAgregarCasetaEditar"
+                    class="btn btn-secondary">
+
+                    + AGREGAR CASETA
+
+                </button>
+
+            </div>
+
+
+            <div
+                id="listaCasetasEditar"
+                class="casetas-list">
+
+            </div>
+
+
+            <div class="cost-summary">
+
+                <div>
+                    <span>SUBTOTAL</span>
+                    <strong id="editarSubtotal">$0.00</strong>
+                </div>
+
+                <div>
+                    <span>IVA</span>
+                    <strong id="editarIva">$0.00</strong>
+                </div>
+
+                <div class="total">
+                    <span>TOTAL</span>
+                    <strong id="editarTotal">$0.00</strong>
+                </div>
+
+            </div>
+
+
+            <div class="modal-actions">
+
+                <button
+                    type="button"
+                    id="btnCancelarEdicion"
+                    class="btn btn-secondary">
+
+                    CANCELAR
+
+                </button>
+
+                <button
+                    type="submit"
+                    class="btn btn-primary">
+
+                    GUARDAR CAMBIOS
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="js/supabase.js"></script>
+<script src="js/auth.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", async () => {
+        const sesion = await window.SistemaAuth.protegerPagina();
+        if (!sesion) return;
+        const btn = document.getElementById("btnCerrarSesion");
+        if (btn) btn.addEventListener("click", () => window.SistemaAuth.cerrarSesion());
+    });
+</script>
+<script src="js/utilidades.js"></script>
+<script src="js/concluidos.js"></script>
+
+<script src="js/sidebar.js"></script>
+</body>
+</html>

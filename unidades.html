@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Unidades | Sistema TAG</title>
+
+    <script>
+        // Estado del menú antes del primer pintado: evita parpadeos y cambios de layout.
+        (function () {
+            try {
+                document.documentElement.dataset.sidebarState =
+                    localStorage.getItem('sistemaMonitoreoTAG.sidebarOpen') === '1' ? 'open' : 'closed';
+            } catch (_) {
+                document.documentElement.dataset.sidebarState = 'closed';
+            }
+        })();
+    </script>
+    <link rel="stylesheet" href="css/estilos.css?v=41">
+
+</head>
+
+<body>
+
+<div class="app-shell">
+<script>
+    (function () {
+        const shell = document.querySelector('.app-shell');
+        if (!shell) return;
+        const open = document.documentElement.dataset.sidebarState === 'open';
+        shell.classList.add(open ? 'sidebar-open' : 'sidebar-collapsed');
+    })();
+</script>
+
+    <button id="btnSidebarToggle" class="sidebar-toggle" type="button" aria-label="Desplegar menú lateral" aria-expanded="false" title="Desplegar menú">☰</button>
+
+    <aside class="sidebar">
+
+        <div class="brand">
+            <div class="brand-icon">🚛</div>
+
+            <div>
+                <strong>MONITOREO TAG</strong>
+                <small>SISTEMA OPERATIVO</small>
+            </div>
+        </div>
+
+        <nav class="menu">
+<a href="monitoreo.html" class="menu-item">
+                <span>📡</span>
+                MONITOREO
+            </a>
+
+            <a href="concluidos.html" class="menu-item">
+                <span>✓</span>
+                CONCLUIDOS
+            </a>
+
+            <a href="operadores.html" class="menu-item">
+                <span>👤</span>
+                OPERADORES
+            </a>
+
+            <a href="unidades.html" class="menu-item activa">
+                <span>🚚</span>
+                UNIDADES
+            </a>
+
+            <a href="rutas.html" class="menu-item">
+                <span>🛣️</span>
+                RUTAS
+            </a>
+
+        </nav>
+
+        <div class="sidebar-user" title="Usuario autenticado">
+            <span class="sidebar-user-icon">●</span>
+            <span class="sidebar-user-email" data-user-email>USUARIO</span>
+        </div>
+
+        <button id="btnCerrarSesion" class="menu-logout" type="button">
+            <span>↪</span>
+            CERRAR SESIÓN
+        </button>
+
+        <div class="sidebar-footer">
+            <span class="estado-dot"></span>
+            SISTEMA EN LÍNEA
+        </div>
+
+    </aside>
+
+
+    <main class="main-content">
+
+        <header class="topbar">
+
+            <div>
+
+                <span class="eyebrow">
+                    CATÁLOGOS
+                </span>
+
+                <h1>
+                    UNIDADES
+                </h1>
+
+                <p>
+                    ADMINISTRACIÓN DE ECO, PLACAS Y UNIDADES
+                </p>
+
+            </div>
+
+            <div class="topbar-actions">
+                <button id="btnSamsara" class="btn btn-secondary" type="button" aria-label="Vincular unidades con Samsara" title="Samsara">SAMSARA</button>
+                <button id="btnNuevaUnidad" class="btn btn-primary" type="button" aria-label="Nueva unidad" title="Nueva unidad">+ NUEVA UNIDAD</button>
+            </div>
+
+        </header>
+
+
+        <section class="panel">
+
+            <div class="filters">
+
+                <div class="form-group">
+
+                    <label>
+                        BUSCAR
+                    </label>
+
+                    <input
+                        id="buscarUnidad"
+                        type="search"
+                        placeholder="ECO, PLACAS O DESCRIPCIÓN...">
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        ESTADO
+                    </label>
+
+                    <select id="filtroActivoUnidad">
+
+                        <option value="">
+                            TODOS
+                        </option>
+
+                        <option value="true">
+                            ACTIVAS
+                        </option>
+
+                        <option value="false">
+                            INACTIVAS
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <section class="panel">
+
+            <div class="table-wrapper">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>ID</th>
+                            <th>ECO</th>
+                            <th>PLACAS</th>
+                            <th>TIPO</th>
+                            <th>DESCRIPCIÓN</th>
+                            <th>ESTADO</th>
+                            <th>SAMSARA</th>
+                            <th>ACCIONES</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="tablaUnidades"></tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+
+<div id="modalUnidad" class="modal">
+
+    <div class="modal-content small">
+
+        <div class="modal-header">
+
+            <h2 id="tituloModalUnidad">
+                NUEVA UNIDAD
+            </h2>
+
+            <button
+                id="cerrarModalUnidad"
+                class="modal-close">
+
+                ×
+
+            </button>
+
+        </div>
+
+
+        <form id="formUnidad">
+
+            <input
+                id="unidadId"
+                type="hidden">
+
+
+            <div class="form-group">
+
+                <label for="ecoUnidad">
+                    ECO
+                </label>
+
+                <input
+                    id="ecoUnidad"
+                    type="text"
+                    required>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="placasUnidad">
+                    PLACAS
+                </label>
+
+                <input
+                    id="placasUnidad"
+                    type="text"
+                    placeholder="OPCIONAL">
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="tipoUnidad">
+                    TIPO DE UNIDAD
+                </label>
+
+                <select id="tipoUnidad" required>
+                    <option value="">SELECCIONA...</option>
+                    <option value="AUTOBUS">AUTOBUS</option>
+                    <option value="AUTO MOVIL">AUTO MOVIL</option>
+                    <option value="TORTON">TORTON</option>
+                    <option value="TRACTO CAMION">TRACTO CAMION</option>
+                </select>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="descripcionUnidad">
+                    DESCRIPCIÓN
+                </label>
+
+                <input
+                    id="descripcionUnidad"
+                    type="text"
+                    placeholder="OPCIONAL">
+
+            </div>
+
+
+            <div class="modal-actions">
+
+                <button
+                    type="button"
+                    id="btnCancelarUnidad"
+                    class="btn btn-secondary">
+
+                    CANCELAR
+
+                </button>
+
+                <button
+                    type="submit"
+                    class="btn btn-primary">
+
+                    GUARDAR
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+
+<div id="modalSamsara" class="modal" aria-hidden="true">
+    <div class="modal-content xlarge samsara-modal-content">
+        <div class="modal-header">
+            <div>
+                <span class="eyebrow">SINCRONIZACIÓN</span>
+                <h2>UNIDADES SAMSARA</h2>
+                <p id="estadoSamsara" class="modal-subtitle">REVISA LA SUGERENCIA DE ECO LOCAL Y PULSA <b>VINCULAR</b>. SI YA ESTÁ VINCULADA, PUEDES <b>DESVINCULAR</b>LA DESDE LA MISMA FILA.</p>
+            </div>
+            <button id="cerrarModalSamsara" class="modal-close" type="button">×</button>
+        </div>
+        <div class="samsara-toolbar">
+            <div class="samsara-guide"><span class="samsara-guide-dot"></span><div><strong>VINCULACIÓN DE UNIDADES</strong><small>Las coincidencias por ECO aparecen seleccionadas como sugerencia. Nada se guarda hasta pulsar VINCULAR.</small></div></div>
+            <div id="samsaraSummary" class="samsara-summary"></div>
+        </div>
+        <div class="filters samsara-filters">
+            <div class="form-group">
+                <label for="buscarSamsaraVehiculo">BUSCAR VEHÍCULO</label>
+                <input id="buscarSamsaraVehiculo" type="search" placeholder="BUSCAR ECO, ID, VIN O PLACA...">
+            </div>
+            <button id="btnActualizarSamsara" type="button" class="btn btn-secondary">↻ ACTUALIZAR</button>
+        </div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>VEHÍCULO</th>
+                        <th>ECO LOCAL</th>
+                        <th>ESTADO</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="tablaSamsaraVehiculos"></tbody>
+            </table>
+        </div>
+        <div class="modal-actions">
+            <button id="btnCerrarSamsara" type="button" class="btn btn-secondary">CERRAR</button>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="js/supabase.js"></script>
+<script src="js/auth.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", async () => {
+        const sesion = await window.SistemaAuth.protegerPagina();
+        if (!sesion) return;
+        const btn = document.getElementById("btnCerrarSesion");
+        if (btn) btn.addEventListener("click", () => window.SistemaAuth.cerrarSesion());
+    });
+</script>
+<script src="js/utilidades.js"></script>
+<script src="js/unidades.js"></script>
+<script src="js/samsara.js"></script>
+
+<script src="js/sidebar.js"></script>
+
+
+
+</body>
+</html>

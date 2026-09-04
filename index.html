@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso | Sistema Monitoreo TAG</title>
+    <link rel="stylesheet" href="css/estilos.css?v=41">
+</head>
+<body class="login-page">
+    <main class="login-container">
+        <section class="login-card">
+            <div class="login-brand">
+                <div class="login-icon">🚛</div>
+                <div>
+                    <strong>MONITOREO TAG</strong>
+                    <span>SISTEMA OPERATIVO</span>
+                </div>
+            </div>
+
+            <div class="login-header">
+                <span class="eyebrow">ACCESO SEGURO</span>
+                <h1>Iniciar sesión</h1>
+                <p>Ingresa tus credenciales para acceder al sistema.</p>
+            </div>
+
+            <form id="formLogin" autocomplete="on">
+                <div class="login-field">
+                    <label for="loginEmail">CORREO ELECTRÓNICO</label>
+                    <input id="loginEmail" name="email" type="email" autocomplete="username" placeholder="usuario@empresa.com" required>
+                </div>
+                <div class="login-field">
+                    <label for="loginPassword">CONTRASEÑA</label>
+                    <input id="loginPassword" name="password" type="password" autocomplete="current-password" placeholder="••••••••" required>
+                </div>
+                <div id="loginMensaje" class="login-mensaje" hidden></div>
+                <button id="btnLogin" type="submit" class="login-button">INICIAR SESIÓN</button>
+            </form>
+
+            <div class="login-footer">
+                <span class="estado-dot"></span>
+                SISTEMA PROTEGIDO
+            </div>
+        </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/auth.js"></script>
+</body>
+</html>

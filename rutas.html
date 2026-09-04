@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rutas | Sistema TAG</title>
+    <script>
+        // Estado del menú antes del primer pintado: evita parpadeos y cambios de layout.
+        (function () {
+            try {
+                document.documentElement.dataset.sidebarState =
+                    localStorage.getItem('sistemaMonitoreoTAG.sidebarOpen') === '1' ? 'open' : 'closed';
+            } catch (_) {
+                document.documentElement.dataset.sidebarState = 'closed';
+            }
+        })();
+    </script>
+    <link rel="stylesheet" href="css/estilos.css?v=41">
+</head>
+<body>
+<div class="app-shell">
+<script>
+    (function () {
+        const shell = document.querySelector('.app-shell');
+        if (!shell) return;
+        const open = document.documentElement.dataset.sidebarState === 'open';
+        shell.classList.add(open ? 'sidebar-open' : 'sidebar-collapsed');
+    })();
+</script>
+    <button id="btnSidebarToggle" class="sidebar-toggle" type="button" aria-label="Desplegar menú lateral" aria-expanded="false" title="Desplegar menú">☰</button>
+
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-icon">🚛</div>
+            <div><strong>MONITOREO TAG</strong><small>SISTEMA OPERATIVO</small></div>
+        </div>
+        <nav class="menu">
+<a href="monitoreo.html" class="menu-item"><span>📡</span>MONITOREO</a>
+            <a href="concluidos.html" class="menu-item"><span>✓</span>CONCLUIDOS</a>
+            <a href="operadores.html" class="menu-item"><span>👤</span>OPERADORES</a>
+            <a href="unidades.html" class="menu-item"><span>🚚</span>UNIDADES</a>
+            <a href="rutas.html" class="menu-item activa"><span>🛣️</span>RUTAS</a>
+        </nav>
+        <div class="sidebar-user" title="Usuario autenticado">
+            <span class="sidebar-user-icon">●</span>
+            <span class="sidebar-user-email" data-user-email>USUARIO</span>
+        </div>
+
+        <button id="btnCerrarSesion" class="menu-logout" type="button">
+            <span>↪</span>
+            CERRAR SESIÓN
+        </button>
+
+        <div class="sidebar-footer"><span class="estado-dot"></span>SISTEMA EN LÍNEA</div>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <div>
+                <span class="eyebrow">CATÁLOGO OPERATIVO</span>
+                <h1>RUTAS Y CASETAS</h1>
+                <p>GUARDA LAS RUTAS HABITUALES Y AUTOMATIZA SUS CASETAS.</p>
+            </div>
+            <button id="btnNuevaRuta" class="btn btn-primary">+ NUEVA RUTA</button>
+        </header>
+
+        <section class="panel route-toolbar">
+            <div class="form-group route-search">
+                <label for="buscarRuta">BUSCAR RUTA</label>
+                <input id="buscarRuta" type="search" placeholder="ORIGEN, DESTINO, MUNICIPIO O CASETA..." autocomplete="off">
+            </div>
+            <div class="route-help">
+                <span>💡</span>
+                <div><strong>ATAJO</strong><small>En Nuevo Viaje puedes escribir con el teclado y elegir una ruta de la lista.</small></div>
+            </div>
+        </section>
+
+        <section class="panel route-catalog-panel">
+            <div class="panel-header">
+                <div>
+                    <span class="eyebrow">BASE DE DATOS</span>
+                    <h2>RUTAS DISPONIBLES</h2>
+                    <p>RUTAS Y TARIFAS CARGADAS DESDE LA BASE DE DATOS. FILTRA POR TIPO DE UNIDAD Y EJES.</p>
+                </div>
+                <div class="catalog-status"><span id="estadoCatalogo" class="status-badge loading">CARGANDO...</span><span id="contadorCatalogo" class="route-count">0 RUTAS</span></div>
+            </div>
+            <div class="catalog-filters">
+                <input id="buscarCatalogo" type="search" placeholder="🔎  BUSCAR CIUDAD, ESTADO, CASETA..." autocomplete="off">
+                <select id="filtroTipo"><option value="">TODOS LOS TIPOS</option></select>
+                <select id="filtroEjes"><option value="">TODOS LOS EJES</option></select>
+                <button id="btnLimpiarCatalogo" type="button" class="btn btn-secondary btn-small">LIMPIAR</button>
+            </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead><tr><th>ORIGEN / INICIO</th><th>DESTINO / MUNICIPIO</th><th>TIPO UNIDAD</th><th>EJES</th><th>CASETAS</th><th>TOTAL</th><th>ACCIÓN</th></tr></thead>
+                    <tbody id="tablaCatalogo"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-header">
+                <div><span class="eyebrow">PERSONALIZADAS</span><h2>MIS RUTAS</h2><p>RUTAS CREADAS Y AJUSTADAS POR TU OPERACIÓN.</p></div>
+                <span id="contadorRutas" class="route-count">0 RUTAS</span>
+            </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead><tr><th>RUTA</th><th>CONFIGURACIÓN</th><th>CASETAS</th><th>TOTAL</th><th>ACTUALIZADA</th><th>ACCIONES</th></tr></thead>
+                    <tbody id="tablaRutas"></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+</div>
+
+<div id="modalRuta" class="modal">
+    <div class="modal-content large">
+        <div class="modal-header">
+            <div><span class="eyebrow">CATÁLOGO</span><h2 id="tituloModalRuta">NUEVA RUTA</h2><p class="modal-subtitle">Define origen, destino, municipio / alcaldía y las casetas que normalmente utiliza.</p></div>
+            <button id="cerrarModalRuta" class="modal-close" type="button">×</button>
+        </div>
+        <form id="formRuta">
+            <input id="rutaId" type="hidden">
+            <div class="form-grid">
+                <div class="form-group route-picker-group"><label for="rutaOrigen">ORIGEN</label><div class="route-picker"><input id="rutaOrigen" type="text" required autocomplete="off" placeholder="ESCRIBE PARA BUSCAR..." aria-autocomplete="list" aria-controls="sugerenciasOrigen"><div id="sugerenciasOrigen" class="route-suggestions" role="listbox" hidden></div></div></div>
+                <div class="form-group route-picker-group"><label for="rutaDestino">DESTINO</label><div class="route-picker"><input id="rutaDestino" type="text" required autocomplete="off" placeholder="ESCRIBE PARA BUSCAR..." aria-autocomplete="list" aria-controls="sugerenciasDestino"><div id="sugerenciasDestino" class="route-suggestions" role="listbox" hidden></div></div></div>
+                <div class="form-group route-picker-group"><label for="rutaMunicipio">MUNICIPIO / ALCALDÍA</label><div class="route-picker"><input id="rutaMunicipio" type="text" required autocomplete="off" placeholder="ESCRIBE MUNICIPIO O ALCALDÍA..." aria-autocomplete="list" aria-controls="sugerenciasMunicipioRuta"><div id="sugerenciasMunicipioRuta" class="route-suggestions" role="listbox" hidden></div></div></div>
+                <div class="form-group"><label for="rutaTipoUnidad">TIPO DE UNIDAD</label><select id="rutaTipoUnidad" required><option value="">SELECCIONA TIPO</option><option value="AUTOBUS">AUTOBUS</option><option value="AUTO MOVIL">AUTO MOVIL</option><option value="TORTON">TORTON</option><option value="TRACTO CAMION">TRACTO CAMION</option></select></div>
+                <div class="form-group"><label for="rutaEjes">EJES</label><select id="rutaEjes" required><option value="">SELECCIONA EJES</option><option value="2 EJES">2 EJES</option><option value="3 EJES">3 EJES</option><option value="5 EJES">5 EJES</option><option value="7 EJES (LOW BOY)">7 EJES (LOW BOY)</option><option value="9 EJES">9 EJES</option></select></div>
+            </div>
+
+            <div class="section-title route-section-title">
+                <div><h3>CASETAS DE LA RUTA</h3><p>EL ORDEN SE CONSERVA PARA EL CIERRE Y LA EXPORTACIÓN.</p></div>
+                <button id="btnAgregarCasetaRuta" type="button" class="btn btn-secondary">+ AGREGAR CASETA</button>
+            </div>
+            <div id="listaCasetasRuta" class="casetas-list"></div>
+            <div class="route-total"><span>TOTAL PREDEFINIDO</span><strong id="totalRuta">$0.00</strong></div>
+
+            <div class="modal-actions">
+                <button id="btnEliminarRutaModal" type="button" class="btn btn-danger btn-small" hidden>🗑 ELIMINAR RUTA</button><button id="btnPublicarRutaModal" type="button" class="btn btn-success btn-small" hidden>✓ GUARDAR EN CATÁLOGO</button><button id="btnCancelarRuta" type="button" class="btn btn-secondary">CANCELAR</button>
+                <button type="submit" class="btn btn-primary">GUARDAR RUTA</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+<script src="js/auth.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", async () => {
+        const sesion = await window.SistemaAuth.protegerPagina();
+        if (!sesion) return;
+        const btn = document.getElementById("btnCerrarSesion");
+        if (btn) btn.addEventListener("click", () => window.SistemaAuth.cerrarSesion());
+    });
+</script>
+<script src="js/utilidades.js"></script>
+<script src="js/rutas.js"></script>
+<script src="js/sidebar.js"></script>
+</body>
+</html>

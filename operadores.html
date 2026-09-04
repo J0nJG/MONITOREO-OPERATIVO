@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Operadores | Sistema TAG</title>
+
+    <script>
+        // Estado del menú antes del primer pintado: evita parpadeos y cambios de layout.
+        (function () {
+            try {
+                document.documentElement.dataset.sidebarState =
+                    localStorage.getItem('sistemaMonitoreoTAG.sidebarOpen') === '1' ? 'open' : 'closed';
+            } catch (_) {
+                document.documentElement.dataset.sidebarState = 'closed';
+            }
+        })();
+    </script>
+    <link rel="stylesheet" href="css/estilos.css?v=41">
+
+</head>
+
+<body>
+
+<div class="app-shell">
+<script>
+    (function () {
+        const shell = document.querySelector('.app-shell');
+        if (!shell) return;
+        const open = document.documentElement.dataset.sidebarState === 'open';
+        shell.classList.add(open ? 'sidebar-open' : 'sidebar-collapsed');
+    })();
+</script>
+
+    <button id="btnSidebarToggle" class="sidebar-toggle" type="button" aria-label="Desplegar menú lateral" aria-expanded="false" title="Desplegar menú">☰</button>
+
+    <aside class="sidebar">
+
+        <div class="brand">
+            <div class="brand-icon">🚛</div>
+
+            <div>
+                <strong>MONITOREO TAG</strong>
+                <small>SISTEMA OPERATIVO</small>
+            </div>
+        </div>
+
+        <nav class="menu">
+<a href="monitoreo.html" class="menu-item">
+                <span>📡</span>
+                MONITOREO
+            </a>
+
+            <a href="concluidos.html" class="menu-item">
+                <span>✓</span>
+                CONCLUIDOS
+            </a>
+
+            <a href="operadores.html" class="menu-item activa">
+                <span>👤</span>
+                OPERADORES
+            </a>
+
+            <a href="unidades.html" class="menu-item">
+                <span>🚚</span>
+                UNIDADES
+            </a>
+
+            <a href="rutas.html" class="menu-item">
+                <span>🛣️</span>
+                RUTAS
+            </a>
+
+        </nav>
+
+        <div class="sidebar-user" title="Usuario autenticado">
+            <span class="sidebar-user-icon">●</span>
+            <span class="sidebar-user-email" data-user-email>USUARIO</span>
+        </div>
+
+        <button id="btnCerrarSesion" class="menu-logout" type="button">
+            <span>↪</span>
+            CERRAR SESIÓN
+        </button>
+
+        <div class="sidebar-footer">
+            <span class="estado-dot"></span>
+            SISTEMA EN LÍNEA
+        </div>
+
+    </aside>
+
+
+    <main class="main-content">
+
+        <header class="topbar">
+
+            <div>
+
+                <span class="eyebrow">
+                    CATÁLOGOS
+                </span>
+
+                <h1>
+                    OPERADORES
+                </h1>
+
+                <p>
+                    ADMINISTRACIÓN DE OPERADORES Y TAG
+                </p>
+
+            </div>
+
+            <button
+                id="btnNuevoOperador"
+                class="btn btn-primary">
+
+                + NUEVO OPERADOR
+
+            </button>
+
+        </header>
+
+
+        <section class="panel">
+
+            <div class="filters">
+
+                <div class="form-group">
+
+                    <label>
+                        BUSCAR OPERADOR
+                    </label>
+
+                    <input
+                        id="buscarOperador"
+                        type="search"
+                        placeholder="NOMBRE O TAG...">
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        ESTADO
+                    </label>
+
+                    <select id="filtroActivo">
+
+                        <option value="">
+                            TODOS
+                        </option>
+
+                        <option value="true">
+                            ACTIVOS
+                        </option>
+
+                        <option value="false">
+                            INACTIVOS
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <section class="panel">
+
+            <div class="table-wrapper">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>ID</th>
+                            <th>OPERADOR</th>
+                            <th>TAG</th>
+                            <th>ESTADO</th>
+                            <th>ACCIONES</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="tablaOperadores"></tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+
+<div id="modalOperador" class="modal">
+
+    <div class="modal-content small">
+
+        <div class="modal-header">
+
+            <h2 id="tituloModalOperador">
+                NUEVO OPERADOR
+            </h2>
+
+            <button
+                id="cerrarModalOperador"
+                class="modal-close">
+
+                ×
+
+            </button>
+
+        </div>
+
+
+        <form id="formOperador">
+
+            <input
+                id="operadorId"
+                type="hidden">
+
+
+            <div class="form-group">
+
+                <label for="nombreOperador">
+                    NOMBRE DEL OPERADOR
+                </label>
+
+                <input
+                    id="nombreOperador"
+                    type="text"
+                    required>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="telefonoOperador">
+                    WHATSAPP
+                </label>
+
+                <input
+                    id="telefonoOperador"
+                    type="tel"
+                    inputmode="tel"
+                    autocomplete="tel"
+                    maxlength="15"
+                    placeholder="10 DÍGITOS">
+
+                <small class="field-info">NÚMERO DEL OPERADOR PARA CONTACTO DIRECTO.</small>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="tagOperador">
+                    TAG
+                </label>
+
+                <input
+                    id="tagOperador"
+                    type="text"
+                    placeholder="OPCIONAL">
+
+            </div>
+
+
+            <div class="modal-actions">
+
+                <button
+                    type="button"
+                    id="btnCancelarOperador"
+                    class="btn btn-secondary">
+
+                    CANCELAR
+
+                </button>
+
+                <button
+                    type="submit"
+                    class="btn btn-primary">
+
+                    GUARDAR
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="js/supabase.js"></script>
+<script src="js/auth.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", async () => {
+        const sesion = await window.SistemaAuth.protegerPagina();
+        if (!sesion) return;
+        const btn = document.getElementById("btnCerrarSesion");
+        if (btn) btn.addEventListener("click", () => window.SistemaAuth.cerrarSesion());
+    });
+</script>
+<script src="js/utilidades.js"></script>
+<script src="js/operadores.js"></script>
+
+<script src="js/sidebar.js"></script>
+</body>
+</html>
